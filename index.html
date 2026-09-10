@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>House Chore Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+  <div id="app" class="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+    
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between pb-6 border-b border-slate-200 gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-slate-900 flex items-center gap-2">
+          <i data-lucide="check-square" class="text-indigo-600"></i> House Chore Tracker
+        </h1>
+        <p class="text-sm text-slate-500 mt-1">Earn points by completing chores & claim the weekly Chore Master title!</p>
+      </div>
+      <div class="flex items-center gap-2 bg-indigo-50 border border-indigo-100 p-3 rounded-xl text-indigo-900 font-medium text-sm">
+        <i data-lucide="trophy" class="text-indigo-600 w-5 h-5"></i>
+        <span id="weeklyStatusText">Weekly Race in Progress</span>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Left Column: Leaderboard & Roommates -->
+      <div class="lg:col-span-1 space-y-6">
+        
+        <!-- Roommates & Leaderboard Card -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="award" class="text-amber-500"></i> Leaderboard
+            </h2>
+            <button onclick="openManageUsersModal()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1">
+              <i data-lucide="edit-2" class="w-3 h-3"></i> Edit Names
+            </button>
+          </div>
+
+          <div id="leaderboardList" class="space-y-3"></div>
+
+          <hr class="my-4 border-slate-100">
+
+          <!-- End of Week Actions -->
+          <div>
+            <button onclick="toggleWeeklyAssignment()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 text-sm shadow-sm">
+              <i data-lucide="crown" class="w-4 h-4"></i> End Week & Assign Chores
+            </button>
+          </div>
+        </div>
+
+        <!-- Weekly Winner / Assignment Box -->
+        <div id="assignmentPanel" class="hidden bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-2xl shadow-md space-y-3">
+          <div class="flex justify-between items-start">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+              <i data-lucide="crown"></i> Chore Master Power!
+            </h3>
+            <button onclick="closeAssignmentPanel()" class="text-white/80 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+          </div>
+          <p id="winnerAnnouncementText" class="text-sm text-amber-100"></p>
+          
+          <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 text-xs space-y-2">
+            <p class="font-semibold text-white">Directly Assign a Chore:</p>
+            <select id="assignChoreSelect" class="w-full bg-white text-slate-800 rounded-lg p-2 text-sm font-medium focus:outline-none"></select>
+            <select id="assignUserSelect" class="w-full bg-white text-slate-800 rounded-lg p-2 text-sm font-medium focus:outline-none"></select>
+            <button onclick="submitAssignment()" class="w-full bg-white text-amber-700 hover:bg-amber-50 font-bold py-2 rounded-lg text-sm transition">
+              Assign Chore
+            </button>
+          </div>
+
+          <button onclick="resetWeeklyPoints()" class="w-full text-xs text-center text-amber-200 hover:text-white underline pt-1">
+            Start New Week (Reset Points)
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Chores List & Add Chore -->
+      <div class="lg:col-span-2 space-y-6">
+        
+        <!-- Add Chore Bar -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+          <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+            <i data-lucide="plus-circle" class="text-indigo-600"></i> Add New Chore
+          </h2>
+          <form id="addChoreForm" onsubmit="handleAddChore(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <input type="text" id="choreName" placeholder="e.g. Vacuum Living Room" required 
+                   class="sm:col-span-5 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            
+            <select id="choreDifficulty" class="sm:col-span-4 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="easy">Easy (1 pt)</option>
+              <option value="medium" selected>Medium (2 pts)</option>
+              <option value="hard">Hard (3 pts)</option>
+            </select>
+
+            <button type="submit" class="sm:col-span-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-xl py-2 px-4 transition flex items-center justify-center gap-1 shadow-sm">
+              <i data-lucide="plus" class="w-4 h-4"></i> Add
+            </button>
+          </form>
+        </div>
+
+        <!-- Chore Cards List -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-4">
+          <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <i data-lucide="list-todo" class="text-indigo-600"></i> Household Chores
+            </h2>
+            <span id="activeCount" class="text-xs bg-slate-100 text-slate-600 font-medium px-2.5 py-1 rounded-full">0 pending</span>
+          </div>
+
+          <div id="choresList" class="space-y-3"></div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 space-y-3">
+          <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="history" class="text-slate-500"></i> Recent Activity Log
+          </h2>
+          <ul id="activityLog" class="text-xs text-slate-600 divide-y divide-slate-100 max-h-40 overflow-y-auto"></ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Users Modal -->
+  <div id="userModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+      <h3 class="text-lg font-bold text-slate-900">Manage Housemate Names</h3>
+      <div id="userInputsContainer" class="space-y-3"></div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeManageUsersModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+        <button onclick="saveUserNames()" class="px-4 py-2 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let users = JSON.parse(localStorage.getItem('chore_users')) || [
+      { id: '1', name: 'Housemate 1', points: 0 },
+      { id: '2', name: 'Housemate 2', points: 0 },
+      { id: '3', name: 'Housemate 3', points: 0 },
+      { id: '4', name: 'Housemate 4', points: 0 }
+    ];
+
+    let chores = JSON.parse(localStorage.getItem('chore_chores')) || [
+      { id: '101', name: 'Take out the trash & recycling', difficulty: 'easy', assignedTo: null },
+      { id: '102', name: 'Wipe kitchen counters & stovetop', difficulty: 'easy', assignedTo: null },
+      { id: '103', name: 'Vacuum common areas', difficulty: 'medium', assignedTo: null },
+      { id: '104', name: 'Mop kitchen & hallway floors', difficulty: 'medium', assignedTo: null },
+      { id: '105', name: 'Deep clean bathroom & shower', difficulty: 'hard', assignedTo: null }
+    ];
+
+    let activityLog = JSON.parse(localStorage.getItem('chore_activity')) || [
+      { text: 'App initialized with 4 housemates!', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+    ];
+
+    const difficultyPoints = { easy: 1, medium: 2, hard: 3 };
+    const difficultyBadges = {
+      easy: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      medium: 'bg-amber-100 text-amber-800 border-amber-200',
+      hard: 'bg-rose-100 text-rose-800 border-rose-200'
+    };
+
+    function saveData() {
+      localStorage.setItem('chore_users', JSON.stringify(users));
+      localStorage.setItem('chore_chores', JSON.stringify(chores));
+      localStorage.setItem('chore_activity', JSON.stringify(activityLog));
+      render();
+    }
+
+    function logActivity(text) {
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      activityLog.unshift({ text, time });
+      if (activityLog.length > 20) activityLog.pop();
+    }
+
+    function render() {
+      renderLeaderboard();
+      renderChores();
+      renderActivityLog();
+      lucide.createIcons();
+    }
+
+    function renderLeaderboard() {
+      const list = document.getElementById('leaderboardList');
+      const sortedUsers = [...users].sort((a, b) => b.points - a.points);
+
+      list.innerHTML = sortedUsers.map((user, idx) => {
+        const isLeading = idx === 0 && user.points > 0;
+        return `
+          <div class="flex items-center justify-between p-3 rounded-xl ${isLeading ? 'bg-amber-50 border border-amber-200' : 'bg-slate-50'} transition">
+            <div class="flex items-center gap-3">
+              <span class="w-6 text-center font-bold text-sm ${idx === 0 ? 'text-amber-500' : 'text-slate-400'}">
+                #${idx + 1}
+              </span>
+              <div>
+                <p class="font-semibold text-slate-800 text-sm flex items-center gap-1">
+                  ${user.name}
+                  ${isLeading ? '<i data-lucide="crown" class="w-3.5 h-3.5 text-amber-500 fill-amber-500"></i>' : ''}
+                </p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-lg font-black text-slate-900">${user.points}</span>
+              <span class="text-xs text-slate-500"> pts</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderChores() {
+      const list = document.getElementById('choresList');
+      const count = document.getElementById('activeCount');
+      count.textContent = `${chores.length} total`;
+
+      if (chores.length === 0) {
+        list.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">No chores currently! Add one above.</div>`;
+        return;
+      }
+
+      list.innerHTML = chores.map(chore => {
+        const pts = difficultyPoints[chore.difficulty];
+        const assignedUser = users.find(u => u.id === chore.assignedTo);
+
+        return `
+          <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-slate-900">${chore.name}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full border font-semibold ${difficultyBadges[chore.difficulty]}">
+                  ${chore.difficulty.toUpperCase()} (+${pts} pt${pts > 1 ? 's' : ''})
+                </span>
+              </div>
+              ${assignedUser ? `
+                <p class="text-xs text-amber-700 font-medium flex items-center gap-1">
+                  <i data-lucide="user-check" class="w-3 h-3"></i> Assigned to ${assignedUser.name} by Chore Master!
+                </p>
+              ` : ''}
+            </div>
+
+            <div class="flex items-center gap-2">
+              <select onchange="completeChore('${chore.id}', this.value)" class="bg-white border border-slate-200 text-xs rounded-lg p-2 font-medium focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="">Complete as...</option>
+                ${users.map(u => `<option value="${u.id}">${u.name}</option>`).join('')}
+              </select>
+              <button onclick="deleteChore('${chore.id}')" class="text-slate-400 hover:text-rose-500 p-1.5 transition">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderActivityLog() {
+      const log = document.getElementById('activityLog');
+      log.innerHTML = activityLog.map(item => `
+        <li class="py-1.5 flex justify-between gap-2">
+          <span>${item.text}</span>
+          <span class="text-slate-400 shrink-0">${item.time}</span>
+        </li>
+      `).join('');
+    }
+
+    function handleAddChore(e) {
+      e.preventDefault();
+      const nameInput = document.getElementById('choreName');
+      const diffInput = document.getElementById('choreDifficulty');
+
+      const newChore = {
+        id: Date.now().toString(),
+        name: nameInput.value.trim(),
+        difficulty: diffInput.value,
+        assignedTo: null
+      };
+
+      chores.push(newChore);
+      logActivity(`Added new chore: "${newChore.name}" (${newChore.difficulty})`);
+      nameInput.value = '';
+      saveData();
+    }
+
+    function completeChore(choreId, userId) {
+      if (!userId) return;
+      const chore = chores.find(c => c.id === choreId);
+      const user = users.find(u => u.id === userId);
+      const pts = difficultyPoints[chore.difficulty];
+
+      user.points += pts;
+      logActivity(`${user.name} completed "${chore.name}" (+${pts} pts)`);
+
+      chore.assignedTo = null;
+      saveData();
+    }
+
+    function deleteChore(choreId) {
+      const chore = chores.find(c => c.id === choreId);
+      chores = chores.filter(c => c.id !== choreId);
+      logActivity(`Deleted chore: "${chore.name}"`);
+      saveData();
+    }
+
+    function toggleWeeklyAssignment() {
+      const sortedUsers = [...users].sort((a, b) => b.points - a.points);
+      const winner = sortedUsers[0];
+      const maxPts = winner.points;
+
+      if (maxPts === 0) {
+        alert("No points earned yet this week! Complete some chores first.");
+        return;
+      }
+
+      const panel = document.getElementById('assignmentPanel');
+      panel.classList.remove('hidden');
+
+      document.getElementById('winnerAnnouncementText').innerText = 
+        `${winner.name} is in 1st place with ${winner.points} points! As Chore Master, ${winner.name} can assign chores to remaining housemates.`;
+
+      const choreSelect = document.getElementById('assignChoreSelect');
+      choreSelect.innerHTML = chores.length ? 
+        chores.map(c => `<option value="${c.id}">${c.name} (${c.difficulty})</option>`).join('') :
+        `<option value="">No chores available</option>`;
+
+      const losers = sortedUsers.filter(u => u.points < maxPts);
+      const userSelect = document.getElementById('assignUserSelect');
+
+      if (losers.length === 0) {
+        userSelect.innerHTML = `<option value="">Tie! Everyone has max points!</option>`;
+      } else {
+        userSelect.innerHTML = losers.map(u => `<option value="${u.id}">${u.name} (${u.points} pts)</option>`).join('');
+      }
+    }
+
+    function closeAssignmentPanel() {
+      document.getElementById('assignmentPanel').classList.add('hidden');
+    }
+
+    function submitAssignment() {
+      const choreId = document.getElementById('assignChoreSelect').value;
+      const userId = document.getElementById('assignUserSelect').value;
+
+      if (!choreId || !userId) {
+        alert("Please select both a chore and a housemate.");
+        return;
+      }
+
+      const chore = chores.find(c => c.id === choreId);
+      const user = users.find(u => u.id === userId);
+
+      chore.assignedTo = user.id;
+      logActivity(`Chore Master assigned "${chore.name}" to ${user.name}!`);
+      saveData();
+      alert(`Assigned "${chore.name}" to ${user.name}!`);
+    }
+
+    function resetWeeklyPoints() {
+      if (confirm("Are you sure you want to reset all points for the new week?")) {
+        users.forEach(u => u.points = 0);
+        chores.forEach(c => c.assignedTo = null);
+        logActivity('Weekly leaderboard points were reset.');
+        closeAssignmentPanel();
+        saveData();
+      }
+    }
+
+    function openManageUsersModal() {
+      const container = document.getElementById('userInputsContainer');
+      container.innerHTML = users.map((u, i) => `
+        <div>
+          <label class="text-xs font-semibold text-slate-500">Housemate ${i + 1}</label>
+          <input type="text" id="userInput_${u.id}" value="${u.name}" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm mt-1 focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+      `).join('');
+      document.getElementById('userModal').classList.remove('hidden');
+    }
+
+    function closeManageUsersModal() {
+      document.getElementById('userModal').classList.add('hidden');
+    }
+
+    function saveUserNames() {
+      users.forEach(u => {
+        const input = document.getElementById(`userInput_${u.id}`);
+        if (input && input.value.trim()) {
+          u.name = input.value.trim();
+        }
+      });
+      logActivity('Updated housemate names.');
+      closeManageUsersModal();
+      saveData();
+    }
+
+    render();
+  </script>
+</body>
+</html>
